@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>5ED8F50C-CDF2-4E8F-B83B-B100ADA424B8</string>
+	<key>IDESourceControlProjectName</key>
+	<string>ZombieConga</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>AEC98FD212E55BF97EA938007E626822A34F970B</key>
+		<string>github.com:/drulang/conga</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>ZombieConga/ZombieConga.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>AEC98FD212E55BF97EA938007E626822A34F970B</key>
+		<string>../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>github.com:/drulang/conga</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>AEC98FD212E55BF97EA938007E626822A34F970B</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>AEC98FD212E55BF97EA938007E626822A34F970B</string>
+			<key>IDESourceControlWCCName</key>
+			<string>conga</string>
+		</dict>
+	</array>
+</dict>
+</plist>
