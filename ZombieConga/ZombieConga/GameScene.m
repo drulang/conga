@@ -286,7 +286,7 @@ static const float CAT_MOVE_POINTS_PER_SEC = 120.0;
             CGPoint direction = CGPointZero; //b
             CGPoint amountToMovePerSec = CGPointZero; //C
             CGPoint zmountToMove = CGPointZero; //d
-            SKAction *moveAction = nil;//e
+            SKAction *moveAction = nil; //e
             [node runAction:moveAction];
         }
         targetPosition = node.position; //Will point to the next cat in line on next iteration
