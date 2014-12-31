@@ -40,6 +40,7 @@ static inline CGFloat CGPointToAngle(const CGPoint a) {
 }
 
 static const float ZOMBIE_MOVE_POINTS_PER_SEC = 120.0;
+static const float CAT_MOVE_POINTS_PER_SEC = 120.0;
 
 @implementation GameScene {
     SKSpriteNode *_zombie;
@@ -64,6 +65,7 @@ static const float ZOMBIE_MOVE_POINTS_PER_SEC = 120.0;
         //Add zombie
         _zombie = [SKSpriteNode spriteNodeWithImageNamed:@"zombie1"];
         _zombie.position = CGPointMake(100, 100);
+        _zombie.zPosition = 100;
         
         //1
         NSMutableArray *textures = [NSMutableArray arrayWithCapacity:10];
@@ -227,8 +229,20 @@ static const float ZOMBIE_MOVE_POINTS_PER_SEC = 120.0;
     [self enumerateChildNodesWithName:@"cat" usingBlock:^(SKNode *node, BOOL *stop) {
         SKSpriteNode *cat = (SKSpriteNode *)node;
         if (CGRectIntersectsRect(cat.frame, _zombie.frame)) {
-            [cat removeFromParent];
             [self runAction:_catCollisionSound];
+            
+            //Make the cat follow the zombie
+            cat.name = @"train";
+            [cat removeAllActions];
+            SKAction *scale = [SKAction scaleTo:1 duration:.3];
+            [cat runAction:scale];
+            cat.zRotation = 0;
+            
+            SKAction *turnGreen = [SKAction colorizeWithColor:[UIColor greenColor] colorBlendFactor:1 duration:.2];
+  
+            SKAction *normalColor = [turnGreen reversedAction];
+            SKAction *sequence = [SKAction sequence:@[turnGreen, normalColor]];
+            [cat runAction:sequence];
         }
     }];
     
@@ -261,6 +275,22 @@ static const float ZOMBIE_MOVE_POINTS_PER_SEC = 120.0;
 
 - (void)rotateSprite:(SKSpriteNode *)sprite toFace:(CGPoint)direction{
     sprite.zRotation = CGPointToAngle(direction);
+}
+
+- (void)moveTrain {
+    __block CGPoint targetPosition = _zombie.position;
+    [self enumerateChildNodesWithName:@"traing" usingBlock:^(SKNode *node, BOOL *stop) {
+        if (!node.hasActions) {
+            float actionDuration = .3;
+            CGPoint offset = CGPointSubtract(targetPosition, node.position); //a
+            CGPoint direction = CGPointZero; //b
+            CGPoint amountToMovePerSec = CGPointZero; //C
+            CGPoint zmountToMove = CGPointZero; //d
+            SKAction *moveAction = nil;//e
+            [node runAction:moveAction];
+        }
+        targetPosition = node.position; //Will point to the next cat in line on next iteration
+    }];
 }
 
 #pragma mark Zombie Animation
