@@ -47,6 +47,8 @@ static const float ZOMBIE_MOVE_POINTS_PER_SEC = 120.0;
     NSTimeInterval _lastUpdateTime;
     NSTimeInterval _dt;
     SKAction *_zombieAnimation;
+    SKAction *_catCollisionSound;
+    SKAction *_enemeyCollisionSound;
 }
 
 - (instancetype)initWithSize:(CGSize)size {
@@ -96,6 +98,10 @@ static const float ZOMBIE_MOVE_POINTS_PER_SEC = 120.0;
         SKAction *catSequence = [SKAction sequence:@[generateCatAction, catSpawnWait]];
         [self runAction:[SKAction repeatActionForever:catSequence]];
         
+        //Preload sounds
+        _catCollisionSound = [SKAction playSoundFileNamed:@"hitCat.wav" waitForCompletion:NO];
+        _enemeyCollisionSound = [SKAction playSoundFileNamed:@"hitCatLady.wav" waitForCompletion:NO];
+        
     }
     return self;
 }
@@ -115,8 +121,14 @@ static const float ZOMBIE_MOVE_POINTS_PER_SEC = 120.0;
     [self moveSprite:_zombie velocity:_velocity];
 }
 
+- (void)didEvaluateActions {
+    [self checkCollisions];
+}
+
 - (void)spawnEnemy {
     SKSpriteNode *enemy = [SKSpriteNode spriteNodeWithImageNamed:@"enemy"];
+    enemy.name = @"enemy";
+    
     CGFloat enemyY = ScalarRandomRange(enemy.size.height / 2, self.size.height - enemy.size.height / 2);
     enemy.position = CGPointMake(self.size.width + (enemy.size.width/2), enemyY);
     [self addChild:enemy];
@@ -130,6 +142,8 @@ static const float ZOMBIE_MOVE_POINTS_PER_SEC = 120.0;
 - (void)spawnCat {
     //1
     SKSpriteNode *cat = [SKSpriteNode spriteNodeWithImageNamed:@"cat"];
+    cat.name = @"cat";
+    
     CGFloat catX = ScalarRandomRange(0, self.size.width);
     CGFloat catY = ScalarRandomRange(0, self.size.height);
     cat.position = CGPointMake(catX, catY);
@@ -143,12 +157,19 @@ static const float ZOMBIE_MOVE_POINTS_PER_SEC = 120.0;
     SKAction *leftWiggle = [SKAction rotateByAngle:M_PI / 8 duration:.3];
     SKAction *rightWiggle = [leftWiggle reversedAction];
     SKAction *fullWiggle = [SKAction sequence:@[leftWiggle, rightWiggle]];
-    SKAction *wiggleWait = [SKAction repeatAction:fullWiggle count:10];
+    
+    SKAction *scaleUp = [SKAction scaleBy:1.2 duration:0.25];
+    SKAction *scaleDown = [scaleUp reversedAction];
+    SKAction *fullScale = [SKAction sequence:@[scaleUp, scaleDown, scaleUp, scaleDown]];
+    
+    SKAction *group = [SKAction group:@[fullScale, fullWiggle]];
+    SKAction *groupWait = [SKAction repeatAction:group count:10];
+    
     SKAction *disapear = [SKAction scaleTo:0 duration:.5];
     SKAction *remove = [SKAction removeFromParent];
-    SKAction *sequence = [SKAction sequence:@[appear, wiggleWait, disapear, remove]];
-    [cat runAction:sequence];
     
+    SKAction *sequence = [SKAction sequence:@[appear, groupWait, disapear, remove]];
+    [cat runAction:sequence];
 }
 
 - (void)moveSprite:(SKSpriteNode *)sprite velocity:(CGPoint)velocity {
@@ -198,6 +219,27 @@ static const float ZOMBIE_MOVE_POINTS_PER_SEC = 120.0;
     //4
     _zombie.position = newPosition;
     _velocity = newVelocity;
+}
+
+- (void)checkCollisions {
+    //Try cats
+    [self enumerateChildNodesWithName:@"cat" usingBlock:^(SKNode *node, BOOL *stop) {
+        SKSpriteNode *cat = (SKSpriteNode *)node;
+        if (CGRectIntersectsRect(cat.frame, _zombie.frame)) {
+            [cat removeFromParent];
+            [self runAction:_catCollisionSound];
+        }
+    }];
+    
+    //Check Enemy
+    [self enumerateChildNodesWithName:@"enemy" usingBlock:^(SKNode *node, BOOL *stop) {
+        SKSpriteNode *enemy = (SKSpriteNode *)node;
+        CGRect smallerFrame = CGRectInset(enemy.frame, 20, 20);
+        if (CGRectIntersectsRect(smallerFrame, _zombie.frame)) {
+            [enemy removeFromParent];
+            [self runAction:_enemeyCollisionSound];
+        }
+    }];
 }
 
 - (void)rotateSprite:(SKSpriteNode *)sprite toFace:(CGPoint)direction{
