@@ -8,6 +8,12 @@
 
 #import "GameScene.h"
 
+#define ARC4RANDOM_MAX 0x100000000
+
+static inline CGFloat ScalarRandomRange(CGFloat min, CGFloat max) {
+    return floorf(((double)arc4random() / ARC4RANDOM_MAX) * (max-min) + min);
+}
+
 static inline CGPoint CGPointAdd(const CGPoint a, const CGPoint b) {
     return CGPointMake(a.x + b.x, a.y + b.y);
 }
@@ -40,6 +46,7 @@ static const float ZOMBIE_MOVE_POINTS_PER_SEC = 120.0;
     CGPoint _velocity;
     NSTimeInterval _lastUpdateTime;
     NSTimeInterval _dt;
+    SKAction *_zombieAnimation;
 }
 
 - (instancetype)initWithSize:(CGSize)size {
@@ -55,9 +62,40 @@ static const float ZOMBIE_MOVE_POINTS_PER_SEC = 120.0;
         _zombie = [SKSpriteNode spriteNodeWithImageNamed:@"zombie1"];
         _zombie.position = CGPointMake(100, 100);
         
+        //1
+        NSMutableArray *textures = [NSMutableArray arrayWithCapacity:10];
+        //2
+        for (int i =1; i < 4; i++) {
+            NSString *textureName = [NSString stringWithFormat:@"zombie%d", i];
+            SKTexture *texture = [SKTexture textureWithImageNamed:textureName];
+            [textures addObject:texture];
+        }
+        //3
+        for (int i = 4; i > 1; i--) {
+            NSString *textureName = [NSString stringWithFormat:@"zombie%d", i];
+            SKTexture *texture = [SKTexture textureWithImageNamed:textureName];
+            [textures addObject:texture];
+        }
+        //4
+        _zombieAnimation = [SKAction animateWithTextures:textures timePerFrame:.1];
+        //5
+        [self startZombieAnimation];
+        
         [self addChild:bg];
         [self addChild:_zombie];
-        [self spawnEnemy];
+        
+        //Generate enemy
+        SKAction  *spawnEnemyAction = [SKAction performSelector:@selector(spawnEnemy) onTarget:self];
+        SKAction *wait = [SKAction waitForDuration:2];
+        SKAction *sequence =[SKAction sequence: @[spawnEnemyAction, wait]];
+        [self runAction:[SKAction repeatActionForever:sequence]];
+        
+        //Generate cats
+        SKAction *generateCatAction = [SKAction performSelector:@selector(spawnCat) onTarget:self];
+        SKAction *catSpawnWait = [SKAction waitForDuration:1];
+        SKAction *catSequence = [SKAction sequence:@[generateCatAction, catSpawnWait]];
+        [self runAction:[SKAction repeatActionForever:catSequence]];
+        
     }
     return self;
 }
@@ -69,37 +107,54 @@ static const float ZOMBIE_MOVE_POINTS_PER_SEC = 120.0;
         _dt = 0;
     }
     _lastUpdateTime = currentTime;
-    //NSLog(@"%0.2f milliseconds since last update", _dt * 1000);
+    NSLog(@"%0.2f milliseconds since last update", _dt * 1000);
     
     [self boundsCheckPlayer];
     [self rotateSprite:_zombie toFace:_velocity];
-    //NSLog(@"Velocity: %@", NSStringFromCGPoint(_velocity));
+    NSLog(@"Velocity: %@", NSStringFromCGPoint(_velocity));
     [self moveSprite:_zombie velocity:_velocity];
 }
 
 - (void)spawnEnemy {
     SKSpriteNode *enemy = [SKSpriteNode spriteNodeWithImageNamed:@"enemy"];
-    enemy.position = CGPointMake(self.size.width + (enemy.size.width/2), self.size.height / 2);
+    CGFloat enemyY = ScalarRandomRange(enemy.size.height / 2, self.size.height - enemy.size.height / 2);
+    enemy.position = CGPointMake(self.size.width + (enemy.size.width/2), enemyY);
     [self addChild:enemy];
     
-    SKAction *actionMidMove = [SKAction moveByX:-self.size.width / 2 - enemy.size.width /2 y:-self.size.height/2 + enemy.size.height / 2 duration:1];
-    SKAction *actionMove = [SKAction moveByX:-self.size.width /2 - enemy.size.width / 2 y:self.size.height/2 +enemy.size.height/2 duration:1];
-    SKAction *wait = [SKAction waitForDuration:.25];
-    SKAction *logMessage = [SKAction runBlock:^{
-        NSLog(@"Reached bottom");
-    }];
+    SKAction *actionMove = [SKAction moveTo:CGPointMake(-enemy.size.width /2, enemy.position.y) duration:2.0];
+    SKAction *actionRemove = [SKAction removeFromParent];
+    SKAction *sequence = [SKAction sequence:@[actionMove, actionRemove]];
+    [enemy runAction:sequence];
+}
 
-    SKAction *sequence = [SKAction sequence:@[actionMidMove,logMessage, wait, actionMove]];
-    sequence = [SKAction sequence:@[sequence, [sequence reversedAction]]];
+- (void)spawnCat {
+    //1
+    SKSpriteNode *cat = [SKSpriteNode spriteNodeWithImageNamed:@"cat"];
+    CGFloat catX = ScalarRandomRange(0, self.size.width);
+    CGFloat catY = ScalarRandomRange(0, self.size.height);
+    cat.position = CGPointMake(catX, catY);
+    cat.xScale = 0;
+    cat.yScale = 0;
+    cat.zRotation = -M_PI / 16;
+    [self addChild:cat];
     
-    SKAction *repeat = [SKAction repeatActionForever:sequence];
-    [enemy runAction:repeat];
+    //2
+    SKAction *appear = [SKAction scaleTo:1 duration:.5];
+    SKAction *leftWiggle = [SKAction rotateByAngle:M_PI / 8 duration:.3];
+    SKAction *rightWiggle = [leftWiggle reversedAction];
+    SKAction *fullWiggle = [SKAction sequence:@[leftWiggle, rightWiggle]];
+    SKAction *wiggleWait = [SKAction repeatAction:fullWiggle count:10];
+    SKAction *disapear = [SKAction scaleTo:0 duration:.5];
+    SKAction *remove = [SKAction removeFromParent];
+    SKAction *sequence = [SKAction sequence:@[appear, wiggleWait, disapear, remove]];
+    [cat runAction:sequence];
+    
 }
 
 - (void)moveSprite:(SKSpriteNode *)sprite velocity:(CGPoint)velocity {
     CGPoint amountToMove = CGPointMultiplyScalar(_velocity, _dt);
     
-    //NSLog(@"Amount to move: %@", NSStringFromCGPoint(amountToMove));
+    NSLog(@"Amount to move: %@", NSStringFromCGPoint(amountToMove));
     sprite.position = CGPointAdd(sprite.position, amountToMove);
 }
 
@@ -147,6 +202,18 @@ static const float ZOMBIE_MOVE_POINTS_PER_SEC = 120.0;
 
 - (void)rotateSprite:(SKSpriteNode *)sprite toFace:(CGPoint)direction{
     sprite.zRotation = CGPointToAngle(direction);
+}
+
+#pragma mark Zombie Animation
+
+- (void)startZombieAnimation {
+    if (![_zombie actionForKey:@"animation"]) {
+        [_zombie runAction:[SKAction repeatActionForever:_zombieAnimation] withKey:@"animation"];
+    }
+}
+
+- (void)stopZombieAnimation {
+    [_zombie removeActionForKey:@"animation"];
 }
 
 #pragma mark Touch Handling
