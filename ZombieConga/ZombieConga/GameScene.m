@@ -49,6 +49,7 @@ static const float ZOMBIE_MOVE_POINTS_PER_SEC = 120.0;
     SKAction *_zombieAnimation;
     SKAction *_catCollisionSound;
     SKAction *_enemeyCollisionSound;
+    BOOL _zombieInvincible;
 }
 
 - (instancetype)initWithSize:(CGSize)size {
@@ -235,9 +236,25 @@ static const float ZOMBIE_MOVE_POINTS_PER_SEC = 120.0;
     [self enumerateChildNodesWithName:@"enemy" usingBlock:^(SKNode *node, BOOL *stop) {
         SKSpriteNode *enemy = (SKSpriteNode *)node;
         CGRect smallerFrame = CGRectInset(enemy.frame, 20, 20);
-        if (CGRectIntersectsRect(smallerFrame, _zombie.frame)) {
-            [enemy removeFromParent];
+        if (CGRectIntersectsRect(smallerFrame, _zombie.frame) && !_zombieInvincible) {
+            //Zombie collided with the enemy so make him invincible and start blinking to show
             [self runAction:_enemeyCollisionSound];
+            _zombieInvincible = YES;
+            
+            //Make zombie blink
+            float blinkTimes = 10;
+            float blinkDuration = 3;
+            SKAction *blinkAction = [SKAction customActionWithDuration:blinkDuration actionBlock:^(SKNode *node, CGFloat elapsedTime) {
+                float slice = blinkDuration / blinkTimes;
+                float remainder = fmodf(elapsedTime, slice);
+                node.hidden = remainder > slice / 2;
+                if (elapsedTime == blinkDuration) {
+                    node.hidden = NO;
+                    _zombieInvincible = NO;
+                }
+            }];
+            _zombie.hidden = NO;
+            [_zombie runAction:blinkAction];
         }
     }];
 }
