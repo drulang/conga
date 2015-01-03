@@ -122,6 +122,7 @@ static const float CAT_MOVE_POINTS_PER_SEC = 120.0;
     [self rotateSprite:_zombie toFace:_velocity];
     NSLog(@"Velocity: %@", NSStringFromCGPoint(_velocity));
     [self moveSprite:_zombie velocity:_velocity];
+    [self moveTrain];
 }
 
 - (void)didEvaluateActions {
@@ -279,14 +280,16 @@ static const float CAT_MOVE_POINTS_PER_SEC = 120.0;
 
 - (void)moveTrain {
     __block CGPoint targetPosition = _zombie.position;
-    [self enumerateChildNodesWithName:@"traing" usingBlock:^(SKNode *node, BOOL *stop) {
+    [self enumerateChildNodesWithName:@"train" usingBlock:^(SKNode *node, BOOL *stop) {
         if (!node.hasActions) {
             float actionDuration = .3;
+            
             CGPoint offset = CGPointSubtract(targetPosition, node.position); //a
-            CGPoint direction = CGPointZero; //b
-            CGPoint amountToMovePerSec = CGPointZero; //C
-            CGPoint zmountToMove = CGPointZero; //d
-            SKAction *moveAction = nil; //e
+            CGPoint direction = CGPointNormalize(offset); //b, unit vector
+            CGPoint amountToMovePerSec = CGPointMultiplyScalar(direction, CAT_MOVE_POINTS_PER_SEC); //C
+            CGPoint amountToMove = CGPointMultiplyScalar(amountToMovePerSec, actionDuration); //d
+
+            SKAction *moveAction = [SKAction moveByX:amountToMove.x y:amountToMove.y duration:actionDuration];
             [node runAction:moveAction];
         }
         targetPosition = node.position; //Will point to the next cat in line on next iteration
