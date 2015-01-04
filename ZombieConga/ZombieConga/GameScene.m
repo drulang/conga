@@ -62,7 +62,7 @@ static const float CAT_MOVE_POINTS_PER_SEC = 120.0;
     if (self = [super initWithSize:size]) {
         self.backgroundColor = [UIColor whiteColor];
         _gameOver = NO;
-        _lives = 5;
+        _lives = 3;
         
         // Build background
         SKSpriteNode *bg = [SKSpriteNode spriteNodeWithImageNamed:@"background"];
