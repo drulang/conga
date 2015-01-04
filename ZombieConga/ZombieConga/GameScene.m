@@ -7,6 +7,8 @@
 //
 
 #import "GameScene.h"
+#import "GameOverScene.h"
+@import AVFoundation;
 
 #define ARC4RANDOM_MAX 0x100000000
 
@@ -51,16 +53,22 @@ static const float CAT_MOVE_POINTS_PER_SEC = 120.0;
     SKAction *_catCollisionSound;
     SKAction *_enemeyCollisionSound;
     BOOL _zombieInvincible;
+    BOOL _gameOver;
+    int _lives;
+    AVAudioPlayer *_backgroundMusicPlayer;
 }
 
 - (instancetype)initWithSize:(CGSize)size {
     if (self = [super initWithSize:size]) {
         self.backgroundColor = [UIColor whiteColor];
+        _gameOver = NO;
+        _lives = 5;
         
         // Build background
         SKSpriteNode *bg = [SKSpriteNode spriteNodeWithImageNamed:@"background"];
         bg.position = CGPointMake(self.size.width / 2, self.size.height / 2);
         bg.anchorPoint = CGPointMake(.5, .5);
+        [self playBackgroundMusic:@"bgMusic.mp3"];
         
         //Add zombie
         _zombie = [SKSpriteNode spriteNodeWithImageNamed:@"zombie1"];
@@ -116,13 +124,24 @@ static const float CAT_MOVE_POINTS_PER_SEC = 120.0;
         _dt = 0;
     }
     _lastUpdateTime = currentTime;
-    NSLog(@"%0.2f milliseconds since last update", _dt * 1000);
+    //NSLog(@"%0.2f milliseconds since last update", _dt * 1000);
     
     [self boundsCheckPlayer];
     [self rotateSprite:_zombie toFace:_velocity];
-    NSLog(@"Velocity: %@", NSStringFromCGPoint(_velocity));
+    //NSLog(@"Velocity: %@", NSStringFromCGPoint(_velocity));
     [self moveSprite:_zombie velocity:_velocity];
     [self moveTrain];
+    
+    if (_lives <= 0 && !_gameOver) {
+        _gameOver = YES;
+        NSLog(@"You Lose");
+        [_backgroundMusicPlayer stop];
+        //1
+        SKScene *gameOverScene = [[GameOverScene alloc] initWithSize:self.size won:NO];
+        //2
+        SKTransition *reveal = [SKTransition flipHorizontalWithDuration:.5];
+        [self.view presentScene:gameOverScene transition:reveal];
+    }
 }
 
 - (void)didEvaluateActions {
@@ -179,7 +198,7 @@ static const float CAT_MOVE_POINTS_PER_SEC = 120.0;
 - (void)moveSprite:(SKSpriteNode *)sprite velocity:(CGPoint)velocity {
     CGPoint amountToMove = CGPointMultiplyScalar(_velocity, _dt);
     
-    NSLog(@"Amount to move: %@", NSStringFromCGPoint(amountToMove));
+    //NSLog(@"Amount to move: %@", NSStringFromCGPoint(amountToMove));
     sprite.position = CGPointAdd(sprite.position, amountToMove);
 }
 
@@ -254,6 +273,8 @@ static const float CAT_MOVE_POINTS_PER_SEC = 120.0;
         if (CGRectIntersectsRect(smallerFrame, _zombie.frame) && !_zombieInvincible) {
             //Zombie collided with the enemy so make him invincible and start blinking to show
             [self runAction:_enemeyCollisionSound];
+            [self loseCats];
+            _lives--;
             _zombieInvincible = YES;
             
             //Make zombie blink
@@ -280,7 +301,10 @@ static const float CAT_MOVE_POINTS_PER_SEC = 120.0;
 
 - (void)moveTrain {
     __block CGPoint targetPosition = _zombie.position;
+    __block int trainCount = 0;
+    
     [self enumerateChildNodesWithName:@"train" usingBlock:^(SKNode *node, BOOL *stop) {
+        trainCount++;
         if (!node.hasActions) {
             float actionDuration = .3;
             
@@ -294,6 +318,54 @@ static const float CAT_MOVE_POINTS_PER_SEC = 120.0;
         }
         targetPosition = node.position; //Will point to the next cat in line on next iteration
     }];
+    
+    if (trainCount >= 30 && !_gameOver) {
+        _gameOver = YES;
+        NSLog(@"You win!");
+        [_backgroundMusicPlayer stop];
+        //1
+        SKScene *gameOverScene = [[GameOverScene alloc] initWithSize:self.size won:YES];
+        //2
+        SKTransition *reveal = [SKTransition flipHorizontalWithDuration:.5];
+        [self.view presentScene:gameOverScene transition:reveal];
+    }
+}
+
+- (void)loseCats {
+    //1
+    __block int loseCount = 0;
+    
+    [self enumerateChildNodesWithName:@"train" usingBlock:^(SKNode *node, BOOL *stop) {
+        //2
+        CGPoint randomSpot = node.position;
+        randomSpot.x += ScalarRandomRange(-100, 100);
+        randomSpot.y += ScalarRandomRange(-100, 100);
+        
+        //3
+        node.name = @"";
+        SKAction *group = [SKAction group:@[
+                                            [SKAction rotateByAngle:M_PI * 4 duration:1],
+                                            [SKAction moveTo:randomSpot duration:1],
+                                            [SKAction scaleTo:0 duration:1]
+                                            ]];
+        SKAction *sequence = [SKAction sequence:@[group, [SKAction removeFromParent]]];
+        [node runAction: sequence];
+        
+        // 4
+        loseCount++;
+        if (loseCount >= 2) {
+            *stop = YES;
+        }
+    }];
+}
+
+- (void)playBackgroundMusic:(NSString *)filename {
+    NSError *error;
+    NSURL  *backgroundMusicURL = [[NSBundle mainBundle] URLForResource:filename withExtension:nil];
+    _backgroundMusicPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:backgroundMusicURL error:&error];
+    _backgroundMusicPlayer.numberOfLoops = -1;
+    [_backgroundMusicPlayer prepareToPlay];
+    [_backgroundMusicPlayer play];
 }
 
 #pragma mark Zombie Animation

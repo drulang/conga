@@ -43,6 +43,7 @@
 		7172950F1A49CB6300BF72E6 /* zombie3@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 717294F41A49CB6300BF72E6 /* zombie3@2x.png */; };
 		717295101A49CB6300BF72E6 /* zombie4.png in Resources */ = {isa = PBXBuildFile; fileRef = 717294F51A49CB6300BF72E6 /* zombie4.png */; };
 		717295111A49CB6300BF72E6 /* zombie4@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 717294F61A49CB6300BF72E6 /* zombie4@2x.png */; };
+		718F9D931A597B0D00296B05 /* GameOverScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 718F9D921A597B0D00296B05 /* GameOverScene.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -99,6 +100,8 @@
 		717294F41A49CB6300BF72E6 /* zombie3@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "zombie3@2x.png"; sourceTree = "<group>"; };
 		717294F51A49CB6300BF72E6 /* zombie4.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = zombie4.png; sourceTree = "<group>"; };
 		717294F61A49CB6300BF72E6 /* zombie4@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "zombie4@2x.png"; sourceTree = "<group>"; };
+		718F9D911A597B0D00296B05 /* GameOverScene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameOverScene.h; sourceTree = "<group>"; };
+		718F9D921A597B0D00296B05 /* GameOverScene.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GameOverScene.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -143,6 +146,8 @@
 				717294D81A49CB6300BF72E6 /* Art */,
 				717294B41A49C67000BF72E6 /* GameScene.h */,
 				717294B51A49C67000BF72E6 /* GameScene.m */,
+				718F9D911A597B0D00296B05 /* GameOverScene.h */,
+				718F9D921A597B0D00296B05 /* GameOverScene.m */,
 				717294B71A49C67000BF72E6 /* GameScene.sks */,
 				717294B91A49C67000BF72E6 /* GameViewController.h */,
 				717294BA1A49C67000BF72E6 /* GameViewController.m */,
@@ -368,6 +373,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				718F9D931A597B0D00296B05 /* GameOverScene.m in Sources */,
 				717294BB1A49C67000BF72E6 /* GameViewController.m in Sources */,
 				717294B31A49C67000BF72E6 /* AppDelegate.m in Sources */,
 				717294B61A49C67000BF72E6 /* GameScene.m in Sources */,
@@ -562,6 +568,7 @@
 				717294D41A49C67000BF72E6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		717294D51A49C67000BF72E6 /* Build configuration list for PBXNativeTarget "ZombieCongaTests" */ = {
 			isa = XCConfigurationList;
@@ -570,6 +577,7 @@
 				717294D71A49C67000BF72E6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
